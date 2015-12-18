@@ -23,15 +23,6 @@ import (
 	"github.com/nfnt/resize"
 )
 
-// Storage is a structure of blog post
-type Storage struct {
-	ID       int
-	Title    string
-	Body     string
-	CreateAt string
-	Picture  string
-}
-
 // BlogStorage will store blog posts
 var BlogStorage storage.Storage
 
