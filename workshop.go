@@ -182,8 +182,8 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 					m := resize.Resize(uint(conf.Width/divider), 0, img, resize.Lanczos3)
 
 					out, err := os.Create("./img/" + strconv.Itoa(divider) + "_" + sOriginalFile)
-					if err != nil {
-						log.Fatal("label5 = " + err.Error())
+					if isError(err, w) {
+						return
 					}
 					defer out.Close()
 
@@ -240,7 +240,6 @@ func handlerEdit(w http.ResponseWriter, r *http.Request) {
 	id := 0
 	var err error
 	if id, err = strconv.Atoi(m[2]); err != nil {
-		log.Println("Sux")
 		http.NotFound(w, r)
 		return
 	}
