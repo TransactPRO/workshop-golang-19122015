@@ -89,9 +89,9 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 			body := r.FormValue("body")
 
 			entry := blog.Entry{ID: id, Title: title, Body: body, CreateAt: createAt}
-			entryID := BlogStorage.Add(entry)
+			entryID := BlogStorage.Add(entry) // we created entry, now we can save it
 
-			r.ParseMultipartForm(4096 * 10)
+			r.ParseMultipartForm(4096 * 10) // how many bytes of image will be stored in memory
 			f, fh, err := r.FormFile("picture")
 			if err != nil {
 				log.Println(BlogStorage.GetAll())
@@ -107,6 +107,7 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 				ext = "jpeg"
 			}
 
+			// here we are creating random file name
 			randBytes := make([]byte, 16)
 			rand.Read(randBytes)
 			filename := filepath.Join(hex.EncodeToString(randBytes)) + "." + ext
@@ -115,10 +116,13 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			// after successfull creation we copy our image to this file
 			io.Copy(fdesc, f)
 			fdesc.Close()
 			f.Close()
 
+			// after successfull save of image to file,
+			// we update our created entry
 			entry.Picture = filename
 			BlogStorage.Update(entryID, entry)
 
@@ -129,7 +133,11 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 			case "image/jpeg":
 				sImageType = "jpeg"
 			}
+			
+			// here we are making three files
+			// of different sizes from original image
 			for i := 2; i <= 3; i++ {
+				// here we are using goroutines to do resize operation concurrently
 				go func(divider int, sOriginalFile string, sType string, w http.ResponseWriter) {
 
 					file, err := os.Open("./img/" + sOriginalFile)
@@ -144,10 +152,12 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 					)
 					switch sType {
 					case "jpeg":
+						// when we decoded config, our bytes shifted
 						conf, err = jpeg.DecodeConfig(file)
 						if isError(err, w) {
 							return
 						}
+						// so we need to return them back
 						file.Seek(0, 0)
 						img, err = jpeg.Decode(file)
 						if isError(err, w) {
